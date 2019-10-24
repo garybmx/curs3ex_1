@@ -1,37 +1,65 @@
 package com.example.curs3ex_1.presenters;
-import com.example.curs3ex_1.MainActivity;
-import com.example.curs3ex_1.R;
+import android.support.annotation.NonNull;
+import com.example.curs3ex_1.MainView;
 import com.example.curs3ex_1.models.Model;
+
+import java.lang.ref.WeakReference;
 
 public class Presenter {
     private Model mModel;
-    private MainActivity view;
-    public Presenter(MainActivity view){
-        this.mModel = new Model();
-        this.view = view;
+    private WeakReference<MainView> view;
+    private static Presenter instance;
+
+    public static Presenter getInstance() {
+        if (instance == null) {
+            instance = new Presenter();
+        }
+        return instance;
     }
+    public Presenter(){
+        this.mModel = new Model();
+    }
+
     private int calcNewModelValue(int modelElementIndex){
         int currentValue = mModel.getElementValueAtIndex(modelElementIndex);
         return currentValue + 1;
     }
     public void buttonClick(int btnIndex){
         int newModelValue;
-        switch (btnIndex){
-            case R.id.btnCounter1:
-                newModelValue = calcNewModelValue(0);
-                mModel.setElementValueAtIndex(0, newModelValue);
-                view.setButtonText(1, newModelValue);
-                break;
-            case R.id.btnCounter2:
-                newModelValue = calcNewModelValue(1);
-                mModel.setElementValueAtIndex(1, newModelValue);
-                view.setButtonText(2, newModelValue);
-                break;
-            case R.id.btnCounter3:
-                newModelValue = calcNewModelValue(2);
-                mModel.setElementValueAtIndex(2, newModelValue);
-                view.setButtonText(3, newModelValue);
-                break;
+        newModelValue = calcNewModelValue(btnIndex);
+        mModel.setElementValueAtIndex(btnIndex, newModelValue);
+        view().setButtonText(btnIndex, newModelValue);
+    }
+
+    protected boolean setupDone() {
+        return view() != null && mModel != null;
+    }
+
+    protected MainView view() {
+        if (view == null) {
+            return null;
+        } else {
+            return view.get();
         }
     }
+
+    public void bindView(@NonNull MainView view) {
+        this.view = new WeakReference<>(view);
+        if (setupDone()) {
+            updateView();
+        }
+    }
+
+    public void unbindView() {
+        this.view = null;
+    }
+
+    protected void updateView() {
+        for (int i=0; i<3; i++){
+            int value = mModel.getElementValueAtIndex(i);
+            view().setButtonText(i, value);
+        }
+    }
+
+
 }
